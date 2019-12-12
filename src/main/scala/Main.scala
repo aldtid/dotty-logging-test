@@ -3,6 +3,11 @@ object Main {
   // Union type
   type CommonOrOther = Common | Other
 
+  // Another union type
+  final case class C(value: Boolean)
+
+  type CommonOrOtherOrC = CommonOrOther | C
+
   // Extension method
   def [A : Semigroup, B](a: A) &(b: B)(given as: LoggableAs[B, A]): A =
     Semigroup[A].combine(a, as.from(b))
@@ -45,6 +50,15 @@ object Main {
     }
   }
 
+  given commonOrOtherOrCLoggable: LoggableAs[CommonOrOtherOrC, String] {
+    def from(coooc: CommonOrOtherOrC): String = coooc match {
+      //case coo: CommonOrOther => commonOrOtherLoggable.from(coo)
+      case common: Common => commonLoggable.from(common)
+      case other: Other => otherLoggable.from(other)
+      case c: C => s"c: ${c.value}"
+    }
+  }
+
   // Main function
   def main(args: Array[String]): Unit = {
 
@@ -56,6 +70,8 @@ object Main {
     val a: Other.A = new Other.A("a")
     val b: Other.B = new Other.B(0)
 
+    val c: C = C(true)
+
     val initialLog: String = ""
 
     logCommon(logger, cause, initialLog)
@@ -66,6 +82,9 @@ object Main {
     logCauseAndA(logger, cause, a, initialLog)
     logCommonOrOther(logger, tag, initialLog)
     logCommonOrOther2(logger, tag, b, initialLog)
+    logAll(logger, cause, tag, a, b, initialLog)
+    logC(logger, c, initialLog)
+    logCommonAndC(logger, cause, c, initialLog)
 
   }
 
@@ -93,5 +112,14 @@ object Main {
 
   def logCommonOrOther2[L : Show : Semigroup](logger: LoggerAlgebra, coo1: CommonOrOther, coo2: CommonOrOther, log: L)(given LoggableAs[CommonOrOther, L]): Unit =
     logger.info(log & coo1 & coo2)
+
+  def logAll[L : Show : Semigroup](logger: LoggerAlgebra, cause: Common.Cause, tag: Common.Tag, a: Other.A, b: Other.B, log: L)(given LoggableAs[CommonOrOther, L]): Unit =
+    logger.info(log & cause & tag & a & b)
+
+  def logC[L : Show : Semigroup](logger: LoggerAlgebra, c: C, log: L)(given LoggableAs[C, L]): Unit =
+    logger.info(log & c)
+
+  def logCommonAndC[L : Show : Semigroup](logger: LoggerAlgebra, cause: Common.Cause, c: C, log: L)(given LoggableAs[Common | C , L]): Unit =
+    logger.info(log & cause & c)
 
 }
