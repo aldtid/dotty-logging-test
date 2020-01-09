@@ -21,20 +21,27 @@ object Main {
     def combine(s1: String, s2: String): String = s"$s1 | $s2"
   }
 
-  given commonOrOtherLoggable: LoggableAs[CommonOrOther, String] {
-    def from(coo: CommonOrOther): String = coo match {
-      case common: Common => Common.commonLoggable.from(common)
-      case other: Other => Other.otherLoggable.from(other)
-    }
-  }
+  // Prevent these givens to be caught in first place placing them in an inner object
+  object givens {
 
-  given commonOrOtherOrCLoggable: LoggableAs[CommonOrOtherOrC, String] {
-    def from(coooc: CommonOrOtherOrC): String = coooc match {
-      //case coo: CommonOrOther => commonOrOtherLoggable.from(coo)
-      case common: Common => Common.commonLoggable.from(common)
-      case other: Other => Other.otherLoggable.from(other)
-      case c: C => s"c: ${c.value}"
+    given commonOrOtherLoggable: LoggableAs[CommonOrOther, String] {
+      def from(coo: CommonOrOther): String =
+        "from CommonOrOther: " + (coo match {
+        case common: Common => Common.commonLoggable.from(common)
+        case other: Other => Other.otherLoggable.from(other)
+      })
     }
+
+    given commonOrOtherOrCLoggable: LoggableAs[CommonOrOtherOrC, String] {
+      def from(coooc: CommonOrOtherOrC): String =
+        "from CommonOrOtherOrC: " + (coooc match {
+        //case coo: CommonOrOther => commonOrOtherLoggable.from(coo)
+        case common: Common => Common.commonLoggable.from(common)
+        case other: Other => Other.otherLoggable.from(other)
+        case c: C => s"c: ${c.value}"
+      })
+    }
+
   }
 
   // Main function
@@ -58,11 +65,18 @@ object Main {
     logCause(logger, cause, initialLog)
     logA(logger, a, initialLog)
     logCauseAndA(logger, cause, a, initialLog)
-    logCommonOrOther(logger, tag, initialLog)
-    logCommonOrOther2(logger, tag, b, initialLog)
-    logAll(logger, cause, tag, a, b, initialLog)
-    logC(logger, c, initialLog)
-    logCommonAndC(logger, cause, c, initialLog)
+
+    {
+
+      import givens.given
+
+      logCommonOrOther(logger, tag, initialLog)
+      logCommonOrOther2(logger, tag, b, initialLog)
+      logAll(logger, cause, tag, a, b, initialLog)
+      logC(logger, c, initialLog)
+      logCommonAndC(logger, cause, c, initialLog)
+
+    }
 
   }
 
