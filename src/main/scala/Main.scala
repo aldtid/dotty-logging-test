@@ -21,40 +21,18 @@ object Main {
     def combine(s1: String, s2: String): String = s"$s1 | $s2"
   }
 
-  given causeLoggable: LoggableAs[Common.Cause, String] {
-    def from(cause: Common.Cause): String = s"cause: ${cause.value}"
-  }
-
-  given commonLoggable: LoggableAs[Common, String] {
-    def from(common: Common): String = common match {
-      case cause: Common.Cause => causeLoggable.from(cause)
-      case tag: Common.Tag => s"tag: ${tag.value}"
-    }
-  }
-
-  given aLoggable: LoggableAs[Other.A, String] {
-    def from(a: Other.A): String = s"a: ${a.value}"
-  }
-
-  given otherLoggable: LoggableAs[Other, String] {
-    def from(other: Other): String = other match {
-      case a: Other.A => aLoggable.from(a)
-      case b: Other.B => s"b: ${b.value}"
-    }
-  }
-
   given commonOrOtherLoggable: LoggableAs[CommonOrOther, String] {
     def from(coo: CommonOrOther): String = coo match {
-      case common: Common => commonLoggable.from(common)
-      case other: Other => otherLoggable.from(other)
+      case common: Common => Common.commonLoggable.from(common)
+      case other: Other => Other.otherLoggable.from(other)
     }
   }
 
   given commonOrOtherOrCLoggable: LoggableAs[CommonOrOtherOrC, String] {
     def from(coooc: CommonOrOtherOrC): String = coooc match {
       //case coo: CommonOrOther => commonOrOtherLoggable.from(coo)
-      case common: Common => commonLoggable.from(common)
-      case other: Other => otherLoggable.from(other)
+      case common: Common => Common.commonLoggable.from(common)
+      case other: Other => Other.otherLoggable.from(other)
       case c: C => s"c: ${c.value}"
     }
   }
